@@ -1,36 +1,95 @@
 const express = require("express");
 const app = express();
-require("dotenv").config();
 
-const mysql = require("mysql");
-const port = process.env.PORT || 8080;
+const locations = require("./database/locations_crudrepository");
 
-let config = {
-  host: "mydb.tamk.fi",
-  user: process.env.user,
-  password: process.env.password,
-  database: process.env.database,
+var Validator = require("jsonschema").Validator;
+var validator = new Validator();
+
+const locationSchema = {
+  id: "/OneLocation",
+  type: "object",
+  properties: {
+    latitude: { type: "number", minimum: -90, maximum: 90 },
+    longitude: { type: "number", minimum: -180, maximum: 180 },
+  },
+  required: ["latitude", "longitude"],
 };
+validator.addSchema(locationSchema, "/OneLocation");
 
-var connection = mysql.createConnection(config);
+app.use(express.static("public"));
+app.use(express.json());
 
-app.get("/", (req, res) => {
-  connection.query("SELECT * from locations", (error, results) => {
-    if (error) {
-      console.log(error);
+app.get("/locations", async (req, res) => {
+  try {
+    let allLocations = await locations.findAll(); //
+    if (allLocations.length > 0) {
+      res.send(allLocations);
     } else {
-      res.send(results);
+      res.status(404).end();
     }
-  });
+  } catch (err) {
+    res.status(500).end();
+  }
 });
 
-const server = app.listen(port, () => {
-  console.log(`Listening on port ${server.address().port}`);
+app.get("/locations/:id([1-9]+)", async (req, res) => {
+  try {
+    const locationID = Number(req.params.id);
+    let oneLocations = await locations.findById(locationID);
+    if (oneLocations.length > 0) {
+      res.send(oneLocations);
+    } else {
+      res.status(404).end();
+    }
+  } catch (err) {
+    res.status(404).end();
+  }
 });
 
-/*
-const db = [{ name: "tiina" }, { name: "jack" }];
+app.delete("/locations/:id([1-9]+)", async (req, res) => {
+  try {
+    const removeID = Number(req.params.id);
+    let oneLocations = await locations.deleteById(removeID);
+    if (Number(oneLocations.affectedRows) > 0) {
+      res.status(200).end();
+    } else {
+      res.status(404).end();
+    }
+  } catch (err) {
+    res.status(400).end();
+  }
+});
 
-app.get("/names", (req, res) => {
-  res.send(db);
-});*/
+app.post("/locations", async (req, res) => {
+  try {
+    let newLocation = req.body;
+    const validation = validator.validate(newLocation, locationSchema);
+    //testing console.log(validation);
+    var errorMessages = validation.errors.map(function (err) {
+      return err.stack;
+    });
+    console.log(errorMessages);
+
+    if (errorMessages.length === 0) {
+      let oneLocations = await locations.save(newLocation);
+      //test console.log(oneLocations);
+      console.log("rows affected " + oneLocations.affectedRows);
+      if (Number(oneLocations.affectedRows) > 0) {
+        res.status(200).end();
+      } else {
+        res.status(404).end();
+      }
+    } else {
+      res.status(404).end(); // this is better to do in front end send("Bad location code/codes");
+    }
+  } catch (err) {
+    res.status(400).end();
+  }
+});
+
+const server = app.listen(8080, async () => {
+  console.log(`Example app listening on port ${server.address().port}`);
+  let rConn = await locations.connect();
+  console.log(rConn);
+});
