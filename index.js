@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-
+var cors = require("cors");
 const locations = require("./database/locations_crudrepository");
 
 var Validator = require("jsonschema").Validator;
@@ -17,7 +17,9 @@ const locationSchema = {
 };
 validator.addSchema(locationSchema, "/OneLocation");
 
-app.use(express.static("public"));
+app.use(cors());
+app.use(express.static("frontend/build"));
+// first static version app.use(express.static("public"));
 app.use(express.json());
 
 app.get("/locations", async (req, res) => {
@@ -90,6 +92,6 @@ app.post("/locations", async (req, res) => {
 
 const server = app.listen(8080, async () => {
   console.log(`Example app listening on port ${server.address().port}`);
-  let rConn = await locations.connect();
-  console.log(rConn);
+  //not needed with connection pool let rConn = await locations.connect();
+  //console.log(rConn);
 });
