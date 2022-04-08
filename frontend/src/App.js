@@ -1,8 +1,85 @@
-import logo from "./logo.svg";
 import "./App.css";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-import React from "react";
+const App = () => {
+  const [locations, setLocations] = useState([]);
 
+  useEffect(() => {
+    console.log("in effect");
+    async function getLocations() {
+      const locationsA = await axios.get("http://localhost:8080/locations");
+      console.log(locationsA);
+      setLocations(locationsA.data);
+    }
+    getLocations();
+  }, []);
+
+  return (
+    <MapContainer center={[51.505, -0.09]} zoom={2} scrollWheelZoom={false}>
+      <TileLayer
+        attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      {locations.map((loc) => (
+        <Marker key={loc.id} position={[loc.latitude, loc.longitude]}>
+          <Popup>
+            A pretty CSS3 popup. <br /> Easily customizable.
+          </Popup>
+        </Marker>
+      ))}
+    </MapContainer>
+  );
+};
+export default App;
+/*
+class App extends React.Component {
+  state = { locations: [] };
+
+  async componentDidMount() {
+    /**
+    let hr = await axios.get("http://localhost:8080/locations"); //fetch("http://localhost:8080/locations");
+    let json = await hr.json();
+    this.setState({ locations: json });
+     
+    let res = await axios.get("http://localhost:8080/locations"); //fetch("http://localhost:8080/locations");
+    let { data } = await res.data;
+    this.setState({ locations: data });
+  }
+  render() {
+    let markers = this.state.locations.map((loc) => (
+      <Marker key={loc.id} position={[loc.latitude, loc.longitude]}>
+        <Popup>
+          A pretty CSS3 popup. <br /> Easily customizable.
+        </Popup>
+      </Marker>
+      // <li key={loc.id}>
+      //   {loc.id} - {loc.latitude} - {loc.longitude}
+      // </li>
+      /**
+       <Marker position={[51.505, -0.09]}>
+          <Popup>
+            A pretty CSS3 popup. <br /> Easily customizable.
+          </Popup>
+        </Marker>
+       
+    ));
+
+    return (
+      <MapContainer center={[51.505, -0.09]} zoom={2} scrollWheelZoom={false}>
+        <TileLayer
+          attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <span>{markers}</span>
+      </MapContainer>
+    );
+  }
+}
+export default App;
+
+/*
 class App extends React.Component {
   state = { locations: [] };
   async componentDidMount() {
