@@ -6,6 +6,8 @@ const locations = require("./database/locations_crudrepository");
 var Validator = require("jsonschema").Validator;
 var validator = new Validator();
 
+const port = process.env.PORT || 8080;
+
 const locationSchema = {
   id: "/OneLocation",
   type: "object",
@@ -90,7 +92,7 @@ app.post("/locations", async (req, res) => {
   }
 });
 
-const server = app.listen(8080, async () => {
+const server = app.listen(port, async () => {
   console.log(`Example app listening on port ${server.address().port}`);
   //not needed with connection pool let rConn = await locations.connect();
   //console.log(rConn);
