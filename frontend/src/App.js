@@ -9,7 +9,7 @@ const App = () => {
   useEffect(() => {
     console.log("in effect");
     async function getLocations() {
-      const locationsA = await axios.get("http://localhost:8080/locations");
+      const locationsA = await axios.get("/locations"); //http://localhost:8080
       console.log(locationsA);
       setLocations(locationsA.data);
     }
